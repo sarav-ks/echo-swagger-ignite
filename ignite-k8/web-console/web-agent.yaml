@@ -1,0 +1,36 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: ignite-web-agent
+spec:
+  selector:
+    matchLabels:
+      app: ignite-web-agent
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ignite-web-agent
+    spec:
+      serviceAccountName: ignite-sa
+      containers:
+      - name: ignite-web-agent
+        image: docker-registry.default.svc:5000/dev-geekweekly/ingite-web-agent
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+        env:
+        - name: DRIVER_FOLDER
+          value: "./jdbc-drivers"
+        - name: NODE_URI
+          value: "http://gwapp-ignite:8080"
+        - name: SERVER_URI
+          value: "http://ignite-web-frontend"
+        - name: TOKENS
+          value: "CXaT5nRGKTMmEvZzeKBf"
+        - name: NODE_LOGIN
+          value: web-agent
+        - name: NODE_PASSWORD
+          value: password
+          

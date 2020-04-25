@@ -1,0 +1,108 @@
+
+# creating deployment for the backend; specify a Docker Image 
+# in the 'image' field.
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: ignite-web-backend
+  name: ignite-web-backend
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ignite-web-backend
+    spec:
+      containers:
+      - env:
+        - name: mail_auth_pass
+        - name: mail_auth_user
+        - name: mail_from
+        - name: mail_greeting
+        - name: mail_service
+        - name: mail_sign
+        - name: mongodb_url
+          value: mongodb://ignite-mongodb/console
+        - name: server_host
+          value: "0.0.0.0"
+        - name: server_port
+          value: "3000"
+        - name: server_sessionSecret
+          value: CHANGE_ME
+        image: apacheignite/web-console-backend:2.6.0
+        name: backend
+        resources: {}
+      restartPolicy: Always
+      # remove this property if you use a public Docker repository
+      imagePullSecrets:
+        - name: registrykey
+status: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: backend
+  labels:
+    app: ignite-web-backend
+spec:
+  ports:
+  - name: "backend"
+    port: 3000
+    targetPort: 3000
+  selector:
+    app: ignite-web-backend
+status:
+  loadBalancer: {}
+
+---
+# creating deployment for the frontend; specify a Docker Image 
+# in the 'image' field.
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  name: ignite-web-frontend
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: ignite-web-frontend
+    spec:
+      serviceAccountName: ignite-sa
+      containers:
+      - image: apacheignite/web-console-frontend:2.6.0
+        name: ignite-web-frontend
+        ports:
+        - containerPort: 80
+        resources: {}
+      restartPolicy: Always
+status: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: ignite-web-frontend
+  labels:
+    app: ignite-web-frontend
+spec:
+  ports:
+  - name: "frontend"
+    port: 80
+    targetPort: 80
+  selector:
+    app: ignite-web-frontend
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+

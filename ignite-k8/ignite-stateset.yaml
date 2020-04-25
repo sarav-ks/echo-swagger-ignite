@@ -1,0 +1,66 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: gwapp-ignite-set
+spec:
+  selector:
+    matchLabels:
+      app: gwapp-ignite
+  serviceName: gwapp-ignite
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: gwapp-ignite
+    spec:
+      serviceAccountName: ignite-sa
+      volumes:
+        - configMap:
+           defaultMode: 420
+           name: ignite-config
+          name: ignite-config     
+      containers:
+      - name: gwapp-ignite-node
+        image: apacheignite/ignite:2.6.0
+        env:
+        - name: OPTION_LIBS
+          value: ignite-kubernetes,ignite-rest-http
+        - name: CONFIG_URI
+          value: file:////ignite/config/ipfinder.xml
+        - name: IGNITE_QUIET
+          value: "false"
+        - name: JVM_OPTS
+          value: "-Djava.net.preferIPv4Stack=true"
+        ports:
+        - containerPort: 11211 # JDBC port number.
+        - containerPort: 47100 # communication SPI port number.
+        - containerPort: 47500 # discovery SPI port number.
+        - containerPort: 49112 # JMX port number.
+        - containerPort: 10800 # SQL port number.
+        - containerPort: 8080 # REST port number.
+        - containerPort: 10900 #Thin clients port number.
+        volumeMounts:
+        - mountPath: "/wal"
+          name: ignite-wal
+        - mountPath: "/persistence"
+          name: ignite-persistence
+        - mountPath: "/ignite/config"
+          name: ignite-config
+          readOnly: true            
+  volumeClaimTemplates:
+  - metadata:
+      name: ignite-persistence
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "trident-nfsv4"
+      resources:
+        requests:
+          storage: "1Gi"
+  - metadata:
+      name: ignite-wal
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "trident-nfsv4"
+      resources:
+        requests:
+          storage: "1Gi"

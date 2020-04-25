@@ -1,0 +1,150 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Geek Weekly
+  description: APIs for Geek Weekly App
+  termsOfService: http://swagger.io/terms/
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://gwapp.swagger.io/api
+paths:
+  /events:
+    get:
+      description: |
+        Returns all events from the system 
+      operationId: findEvents
+      parameters:
+        - name: tags
+          in: query
+          description: tags to filter by
+          required: false
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+        - name: limit
+          in: query
+          description: maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: event response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      description: Creates a new event in the store.  Duplicates are not allowed
+      operationId: addEvent
+      requestBody:
+        description: Event to add to the store
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: event response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /events/{id}:
+    get:
+      description: Returns an event based on a single ID
+      operationId: find event by id
+      parameters:
+        - name: id
+          in: path
+          description: ID of event to fetch
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: event response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      description: deletes a single event based on the ID supplied
+      operationId: deleteEvent
+      parameters:
+        - name: id
+          in: path
+          description: ID of event to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: event deleted
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Event:
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the event
+        tag:
+          type: string
+          description: Type of the event
+        id:
+          type: integer
+          format: int64
+          description: Unique id of the Event
+        location:
+          type: string
+          description: Type of the event          
+
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          description: Error code
+        message:
+          type: string
+          description: Error message
+

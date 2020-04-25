@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xmlns:util="http://www.springframework.org/schema/util" 
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd 
+        http://www.springframework.org/schema/util 
+        http://www.springframework.org/schema/util/spring-util.xsd"> 
+
+<bean class="org.apache.ignite.configuration.IgniteConfiguration">
+  <property name="discoverySpi">
+    <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+      <property name="ipFinder">
+        <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.kubernetes.TcpDiscoveryKubernetesIpFinder">
+            <property name="namespace" value="dev-geekweekly"/>
+            <property name="serviceName" value="gwapp-ignite"/>
+        </bean>
+      </property>
+    </bean>
+  </property>
+  <property name="workDirectory" value="/persistence/work"/>
+  <!-- Enabling Apache Ignite Persistent Store. -->
+  <property name="dataStorageConfiguration">
+      <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+          <property name="defaultDataRegionConfiguration">
+              <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                  <property name="persistenceEnabled" value="true"/>
+              </bean>
+          </property>
+          <!--
+              Sets a path to the root directory where data and indexes are
+              to be persisted. It's assumed the directory is on a dedicated disk.
+          -->
+          <property name="storagePath" value="/persistence"/>
+          <!--
+              Sets a path to the directory where WAL is stored.
+              It's assumed the directory is on a dedicated disk.
+          -->
+          <property name="walPath" value="/wal"/>
+          <!--
+              Sets a path to the directory where WAL archive is stored.
+              It's assumed the directory is on the same drive with the WAL files.
+          -->
+          <property name="walArchivePath" value="/wal/archive"/>
+      </bean>
+  </property>
+  <property name="cacheConfiguration">
+        <list>
+          <bean class="org.apache.ignite.configuration.CacheConfiguration">
+              <property name="name" value="EventCache"/>
+              <property name="atomicityMode" value="ATOMIC"/>
+              <property name="cacheMode" value="REPLICATED"/>
+
+              <!-- Configure query entities -->
+              <property name="queryEntities">
+                  <list>
+                      <bean class="org.apache.ignite.cache.QueryEntity">
+                          <property name="keyType" value="java.lang.Long"/>
+                          <property name="keyFieldName" value="Id"/>
+                          <property name="valueType" value="Event"/>
+
+                          <property name="fields">
+                              <map>
+                                  <entry key="Id" value="java.lang.Long"/>
+                                  <entry key="Location" value="java.lang.String"/>
+                                  <entry key="Name" value="java.lang.String"/>
+                                  <entry key="Tags" value="java.lang.String"/>
+                               </map>
+                          </property>
+
+                          <property name="indexes">
+                              <list>
+                                  <bean class="org.apache.ignite.cache.QueryIndex">
+                                      <constructor-arg value="Id"/>
+                                  </bean>
+                                  <bean class="org.apache.ignite.cache.QueryIndex">
+                                      <constructor-arg value="Location"/>
+                                  </bean>
+                              </list>
+                          </property>
+                      </bean>
+                  </list>
+              </property>
+          </bean>          
+        </list>
+    </property>      
+</bean>
+</beans>
